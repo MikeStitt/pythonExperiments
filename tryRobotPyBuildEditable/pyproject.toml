@@ -16,7 +16,7 @@ dependencies = [
 requires-python = ">=3.9"
 
 [project.scripts]
-xxx = "trpbe.body:mainEntryPoint"
+trpbe = "trpbe.body:mainEntryPoint"
 
 [build-system]
 requires = [
