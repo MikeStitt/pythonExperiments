@@ -11,7 +11,7 @@ add_to_env = [
     { GCC_COLORS = "1" },
 ]
 
-[repos]
+[robotpyrepos]
 mostRobotPyRepo.name = 'mostrobotpy'
 mostRobotPyRepo.url = 'https://github.com/robotpy/mostrobotpy'
 mostRobotPyRepo.branch = 'main'

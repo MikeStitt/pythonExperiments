@@ -1,12 +1,12 @@
-import json
-
-import subprocess
-from pathlib import Path
-from typing import NamedTuple
 import os
-
 import tomli
 import click
+import json
+import subprocess
+from trpbe.singleton import Singleton
+
+from pathlib import Path
+from typing import NamedTuple
 
 os.environ["RPYBUILD_PARALLEL"] = "1"
 os.environ["RPYBUILD_CC_LAUNCHER"] = "ccache"
@@ -17,25 +17,62 @@ class Repo(NamedTuple):
     url: str
     branch: str
 
-mostRepo = Repo(name='mostrobotpy', url='https://github.com/robotpy/mostrobotpy', branch='main')
-repos = [
-    Repo(name='robotpy-rev', url='https://github.com/robotpy/robotpy-rev', branch='main'),
-    Repo(name='robotpy-navx', url='https://github.com/robotpy/robotpy-navx', branch='main'),
-]
 
-def processConfigEnv(tomlDict):
-    if 'env' in tomlDict \
-            and 'add_to_env' in tomlDict['env'] \
-            and tomlDict['env']['add_to_env'] \
-            and isinstance(tomlDict['env']['add_to_env'], list):
-        for e in tomlDict['env']['add_to_env']:
-            for k, v in e.items():
-                os.environ[k] = v
+class ConfigEnv():
+
+    def __init__(self, tomlDict):
+        self.envList = []
+
+        if 'env' in tomlDict \
+                and 'add_to_env' in tomlDict['env'] \
+                and tomlDict['env']['add_to_env'] \
+                and isinstance(tomlDict['env']['add_to_env'], list):
+            for e in tomlDict['env']['add_to_env']:
+                for k, v in e.items():
+                    self.envList.append({k:v})
+                    os.environ[k] = v
 
 
-def processConfig(ctx):
-    tomlDict = ctx.obj['tomldict']
+class ConfigRepos():
 
+    def __init__(self, tomlDict):
+        self.mostRepo: Repo|None = None
+        self.addRepos: list[Repo] = []
+
+        if 'robotpyrepos' in tomlDict:
+            if 'mostRobotPyRepo' in tomlDict['robotpyrepos'] \
+                and isinstance(tomlDict['robotpyrepos']['mostRobotPyRepo'], dict):
+                r = tomlDict['robotpyrepos']['mostRobotPyRepo']
+                self.mostRepo = Repo(name=r['name'], url=r['url'], branch=r['branch'])
+
+            if 'mostRobotPyAddRepos' in tomlDict['robotpyrepos'] \
+                    and isinstance(tomlDict['robotpyrepos']['mostRobotPyAddRepos'], list):
+                for r in tomlDict['robotpyrepos']['mostRobotPyAddRepos']:
+                    self.addRepos.append(Repo(name=r['name'], url=r['url'], branch=r['branch']))
+
+
+
+
+
+class Config(metaclass=Singleton):
+    def __init__(self):
+        super().__init__()
+        self.ctx = None
+        self.tomlFilename = None
+        self.tomlDict = {}
+
+    def initialize(self, ctx, tomlFilename:str):
+        self.ctx = ctx
+        self.tomlFilename = tomlFilename
+        print(f"self.tomlFilename={self.tomlFilename}")
+
+        with open(tomlFilename, "rb") as f:
+            self.tomlDict = tomli.load(f)
+
+            print(json.dumps(self.tomlDict, indent=4))
+
+        self.env = ConfigEnv(self.tomlDict)
+        self.robotpyrepos = ConfigRepos(self.tomlDict)
 
 
 
@@ -44,17 +81,8 @@ def processConfig(ctx):
 @click.pass_context
 def cli(ctx, toml):
     ctx.ensure_object(dict)
-    ctx.obj['toml'] = toml
-    print(f"ctx.obj['toml']={ctx.obj['toml']}")
 
-    with open(toml, "rb") as f:
-        toml_dict = tomli.load(f)
-
-        print(json.dumps(toml_dict))
-        ctx.obj['tomldict'] = toml_dict
-
-    processConfig(ctx)
-
+    Config().initialize(ctx, toml)
 
 
 def runCd(path:str):
@@ -113,8 +141,8 @@ def gitClone(repo: Repo):
 @click.pass_context
 def clone(ctx):
     """Clone the necessary repos"""
-    gitClone(mostRepo)
-    for r in repos:
+    gitClone(Config().robotpyrepos.mostRepo)
+    for r in Config().robotpyrepos.addRepos:
         gitClone(r)
 
 cli.add_command(clone)
@@ -124,8 +152,7 @@ cli.add_command(clone)
 def installformostrobotpy(ctx):
     """Install python modules that mostrobotpy needs to build"""
     runCommand(['pip', 'install', 'robotpy'])
-    runCommand(['pwd'], cwd=str(Path.cwd() / mostRepo.name))
-    runCd(mostRepo.name)
+    runCd(Config().robotpyrepos.mostRepo.name)
     runCommand(['pip', 'install', '-r', 'rdev_requirements.txt'])
     runCommand(['pip', 'install', 'numpy'])
     runCd('..')
@@ -136,7 +163,7 @@ cli.add_command(installformostrobotpy)
 @click.pass_context
 def buildmostrobotpy(ctx):
     """Build mostrobotpy"""
-    runCd(mostRepo.name)
+    runCd(Config().robotpyrepos.mostRepo.name)
     runCommandNoWaitForOutput(['./rdev.sh', 'ci', 'run'])
     runCd('..')
 
@@ -147,7 +174,7 @@ cli.add_command(buildmostrobotpy)
 @click.pass_context
 def installeditablemostrobotpy(ctx):
     """Build mostrobotpy"""
-    runCd(mostRepo.name)
+    runCd(Config().robotpyrepos.mostRepo.name)
     runCommandNoWaitForOutput(['./rdev.sh', 'develop'])
     runCd('..')
 
@@ -222,43 +249,26 @@ cli.add_command(buildreveditable)
 
 @click.command()
 @click.pass_context
-def doall(ctx):
+def dobuildall(ctx):
     """run all steps"""
     ctx.invoke(clone)
     ctx.invoke(installformostrobotpy)
     ctx.invoke(buildmostrobotpy)
+
+cli.add_command(dobuildall)
+
+@click.command()
+@click.pass_context
+def doeditable(ctx):
+    """run all steps"""
+    ctx.invoke(clone)
+    ctx.invoke(installformostrobotpy)
     ctx.invoke(uninstallpkgsformostrobotpyeditable)
     ctx.invoke(installeditablemostrobotpy)
 
-cli.add_command(doall)
-
-@click.command()
-@click.pass_context
-def trytoml(ctx):
-    """try a toml file"""
-
-    ctx.ensure_object(dict)
-    toml = ctx.obj['toml']
-    print(f"toml={toml}")
-    print(f"tomldict={json.dumps(ctx.obj['tomldict'], indent=2)}")
-
-cli.add_command(trytoml)
-
-@click.command()
-@click.pass_context
-def dummy(ctx):
-    print("Here in dummy...")
-
-cli.add_command(dummy)
+cli.add_command(doeditable)
 
 
-@click.command()
-@click.pass_context
-def two(ctx):
-    ctx.invoke(dummy)
-    ctx.invoke(trytoml)
-
-cli.add_command(two)
 
 
 def mainEntryPoint():
