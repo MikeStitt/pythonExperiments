@@ -1,0 +1,22 @@
+# This is a TOML document. See https://toml.io/
+
+# It is a configuration file for trpbe at TODO
+
+title = "Initial trbpe configuation file"
+
+[env]
+add_to_env = [
+    { RPYBUILD_PARALLEL = "1" },
+    { RPYBUILD_CC_LAUNCHER  = "ccache" },
+    { GCC_COLORS = "1" },
+]
+
+[repos]
+mostRobotPyRepo.name = 'mostrobotpy'
+mostRobotPyRepo.url = 'https://github.com/robotpy/mostrobotpy'
+mostRobotPyRepo.branch = 'main'
+
+mostRobotPyAddRepos = [
+    {name='robotpy-rev', url='https://github.com/robotpy/robotpy-rev', branch='main'},
+    {name='robotpy-navx', url='https://github.com/robotpy/robotpy-navx', branch='main'},
+]
