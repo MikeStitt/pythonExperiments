@@ -246,6 +246,16 @@ def buildnavxeditable(ctx):
 
 cli.add_command(buildreveditable)
 
+@click.command()
+@click.pass_context
+def buildAddOnRobotPyEditablePackages(ctx):
+    """build robotpy add on packages editable"""
+    for r in Config().robotpyrepos.addRepos:
+        buildAddOnRobotPyPackageEditable(ctx, r.name)
+
+cli.add_command(buildAddOnRobotPyEditablePackages)
+
+
 
 @click.command()
 @click.pass_context
@@ -265,6 +275,7 @@ def doeditable(ctx):
     ctx.invoke(installformostrobotpy)
     ctx.invoke(uninstallpkgsformostrobotpyeditable)
     ctx.invoke(installeditablemostrobotpy)
+    ctx.invoke(buildAddOnRobotPyEditablePackages)
 
 cli.add_command(doeditable)
 
