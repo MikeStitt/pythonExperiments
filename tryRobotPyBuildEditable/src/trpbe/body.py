@@ -175,7 +175,10 @@ cli.add_command(installformostrobotpyeditable)
 def buildmostrobotpy(ctx):
     """Build mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
-    runCommandNoWaitForOutput(['./rdev.sh', 'ci', 'run'])
+    if os.name == 'nt':
+        runCommandNoWaitForOutput(['python', '-m', 'devtools', 'ci', 'run' ])
+    else:
+        runCommandNoWaitForOutput(['./rdev.sh', 'ci', 'run'])
     runCd('..')
 
 cli.add_command(buildmostrobotpy)
@@ -186,7 +189,11 @@ cli.add_command(buildmostrobotpy)
 def installeditablemostrobotpy(ctx):
     """Build mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
-    runCommandNoWaitForOutput(['./rdev.sh', 'develop'])
+    if os.name == 'nt':
+        # todo why doesn't this work?
+        runCommandNoWaitForOutput(['python', '-m', 'devtools', 'develop' ])
+    else:
+        runCommandNoWaitForOutput(['./rdev.sh', 'develop'])
     runCd('..')
 
 
