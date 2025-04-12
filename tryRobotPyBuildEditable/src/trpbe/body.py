@@ -159,6 +159,17 @@ def installformostrobotpy(ctx):
 
 cli.add_command(installformostrobotpy)
 
+
+@click.command()
+@click.pass_context
+def installformostrobotpyeditable(ctx):
+    """Install python modules that mostrobotpy needs to build editable"""
+    runCommand(['pip', 'install', 'robotpy-build'])
+
+
+cli.add_command(installformostrobotpyeditable)
+
+
 @click.command()
 @click.pass_context
 def buildmostrobotpy(ctx):
@@ -273,6 +284,7 @@ def doeditable(ctx):
     """run all steps"""
     ctx.invoke(clone)
     ctx.invoke(installformostrobotpy)
+    ctx.invoke(installformostrobotpyeditable)
     ctx.invoke(uninstallpkgsformostrobotpyeditable)
     ctx.invoke(installeditablemostrobotpy)
     ctx.invoke(buildAddOnRobotPyEditablePackages)
