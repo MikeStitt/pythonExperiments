@@ -90,12 +90,13 @@ def runCd(path:str):
     os.chdir(path)
 
 
-def runCommand(args, cwd=None)->subprocess.CompletedProcess:
-    print(f"command={' '.join(args)}")
+def runCommand(args, cwd=None, shell=True)->subprocess.CompletedProcess:
+    print(f"command={args}")
     result = subprocess.run(
         args=args,
         check=True,
         cwd=cwd,
+        shell=True,
         input=None,
         text=True,
         stdout=subprocess.PIPE,
@@ -104,13 +105,14 @@ def runCommand(args, cwd=None)->subprocess.CompletedProcess:
     print(f"result=>\n{result.stdout}<=result\n")
     return result
 
-def runCommandNoWaitForOutput(args, cwd=None):
+def runCommandNoWaitForOutput(args, cwd=None, shell=False):
 
     with subprocess.Popen(
             args=args,
             cwd=cwd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            shell=shell,
             bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             print(line, end='')  # process line here
@@ -121,7 +123,7 @@ def runCommandNoWaitForOutput(args, cwd=None):
 def buildAddOnRobotPyPackageEditable(ctx, name:str):
     """Build mostrobotpy"""
     runCd(name)
-    runCommandNoWaitForOutput(['python', 'setup.py', 'develop'])
+    runCommandNoWaitForOutput('python setup.py develop', shell=True)
     runCd('..')
 
 
@@ -129,13 +131,13 @@ def buildAddOnRobotPyPackageEditable(ctx, name:str):
 @click.pass_context
 def showenv(ctx):
     """Show environment variables"""
-    runCommand(['env'])
+    runCommand('env')
 
 cli.add_command(showenv)
 
 def gitClone(repo: Repo):
-    runCommand(['git', 'clone', repo.url])
-    runCommand(["git", "-C", repo.name, "checkout", repo.branch])
+    runCommand(f'git clone {repo.url}')
+    runCommand(f"git -C {repo.name} checkout {repo.branch}")
 
 @click.command()
 @click.pass_context
@@ -151,10 +153,10 @@ cli.add_command(clone)
 @click.pass_context
 def installformostrobotpy(ctx):
     """Install python modules that mostrobotpy needs to build"""
-    runCommand(['pip', 'install', 'robotpy'])
+    runCommand('pip install robotpy')
     runCd(Config().robotpyrepos.mostRepo.name)
-    runCommand(['pip', 'install', '-r', 'rdev_requirements.txt'])
-    runCommand(['pip', 'install', 'numpy'])
+    runCommand('pip install -r rdev_requirements.txt')
+    runCommand('pip install numpy')
     runCd('..')
 
 cli.add_command(installformostrobotpy)
@@ -164,7 +166,7 @@ cli.add_command(installformostrobotpy)
 @click.pass_context
 def installformostrobotpyeditable(ctx):
     """Install python modules that mostrobotpy needs to build editable"""
-    runCommand(['pip', 'install', 'robotpy-build'])
+    runCommand('pip install robotpy-build')
 
 
 cli.add_command(installformostrobotpyeditable)
@@ -175,10 +177,7 @@ cli.add_command(installformostrobotpyeditable)
 def buildmostrobotpy(ctx):
     """Build mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
-    if os.name == 'nt':
-        runCommandNoWaitForOutput(['python', '-m', 'devtools', 'ci', 'run' ])
-    else:
-        runCommandNoWaitForOutput(['./rdev.sh', 'ci', 'run'])
+    runCommandNoWaitForOutput('python -m devtools ci run', shell=True )
     runCd('..')
 
 cli.add_command(buildmostrobotpy)
@@ -189,11 +188,7 @@ cli.add_command(buildmostrobotpy)
 def installeditablemostrobotpy(ctx):
     """Build mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
-    if os.name == 'nt':
-        # todo why doesn't this work?
-        runCommandNoWaitForOutput(['python', '-m', 'devtools', 'develop' ])
-    else:
-        runCommandNoWaitForOutput(['./rdev.sh', 'develop'])
+    runCommandNoWaitForOutput('python -m devtools develop', shell=True)
     runCd('..')
 
 
@@ -218,7 +213,7 @@ uninstallPackages = [
 uninstallPackagesSet = set(uninstallPackages)
 
 def getListOfInstalledPackagesFromPip()->list[dict[str, str]]:
-    result: subprocess.CompletedProcess = runCommand(['pip', 'list', '--format', 'json'])
+    result: subprocess.CompletedProcess = runCommand('pip list --format json')
     firstLine = result.stdout.splitlines()[0]
     listOfInstalledPackagesAsDicts = json.loads(firstLine)
     return listOfInstalledPackagesAsDicts
@@ -242,7 +237,7 @@ def uninstallpkgsformostrobotpyeditable(ctx):
         countOfPackages = len(uninstallThesePackages)
 
         for packageStr in uninstallThesePackages:
-            runCommand(['pip', 'uninstall', '-y', packageStr])
+            runCommand(f'pip uninstall -y {packageStr}')
 
 
 cli.add_command(uninstallpkgsformostrobotpyeditable)
