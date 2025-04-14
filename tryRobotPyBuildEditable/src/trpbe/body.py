@@ -100,6 +100,7 @@ def runCommand(args, cwd=None, shell=True)->subprocess.CompletedProcess:
         input=None,
         text=True,
         encoding='utf-8',
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -115,6 +116,7 @@ def runCommandNoWaitForOutput(args, cwd=None, shell=False):
             stderr=subprocess.STDOUT,
             shell=shell,
             encoding="utf-8",
+            errors="replace",
             bufsize=1, universal_newlines=True) as p:
         print(f"type(p.stdout)={type(p.stdout)}")
         for line in p.stdout:
