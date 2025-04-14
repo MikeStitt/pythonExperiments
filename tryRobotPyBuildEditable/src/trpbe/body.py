@@ -99,6 +99,7 @@ def runCommand(args, cwd=None, shell=True)->subprocess.CompletedProcess:
         shell=True,
         input=None,
         text=True,
+        encoding='utf-8',
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -113,7 +114,9 @@ def runCommandNoWaitForOutput(args, cwd=None, shell=False):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=shell,
+            encoding="utf-8",
             bufsize=1, universal_newlines=True) as p:
+        print(f"type(p.stdout)={type(p.stdout)}")
         for line in p.stdout:
             print(line, end='')  # process line here
 
@@ -192,7 +195,7 @@ def installeditablemostrobotpy(ctx):
     runCd('..')
 
 
-cli.add_command(buildmostrobotpy)
+cli.add_command(installeditablemostrobotpy)
 
 uninstallPackages = [
     "pyntcore",
@@ -267,6 +270,14 @@ def buildAddOnRobotPyEditablePackages(ctx):
         buildAddOnRobotPyPackageEditable(ctx, r.name)
 
 cli.add_command(buildAddOnRobotPyEditablePackages)
+
+
+@click.command()
+@click.pass_context
+def exp(ctx):
+    """try an experiment"""
+    runCommandNoWaitForOutput("ls")
+cli.add_command(exp)
 
 
 
