@@ -204,7 +204,7 @@ cli.add_command(buildmostrobotpy)
 @click.command()
 @click.pass_context
 def installeditablemostrobotpy(ctx):
-    """Build mostrobotpy"""
+    """Build editable mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
     runCommandNoWaitForOutput('python -m devtools develop', shell=True)
     runCd('..')
