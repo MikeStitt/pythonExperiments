@@ -66,9 +66,10 @@ class Config(metaclass=Singleton):
         self.tomlFilename = None
         self.tomlDict = {}
 
-    def initialize(self, ctx, tomlFilename:str):
+    def initialize(self, ctx, tomlFilename:str, clone:bool):
         self.ctx = ctx
         self.tomlFilename = tomlFilename
+        self.clone = clone
         print(f"self.tomlFilename={self.tomlFilename}")
 
         with open(tomlFilename, "rb") as f:
@@ -83,11 +84,12 @@ class Config(metaclass=Singleton):
 
 @click.group()
 @click.option('--toml', default='trpbeConfig.toml', help='Configuration file.')
+@click.option('--clone/--no-clone', default=True, help='Clone/checkout the repos.')
 @click.pass_context
-def cli(ctx, toml):
+def cli(ctx, toml, clone):
     ctx.ensure_object(dict)
 
-    Config().initialize(ctx, toml)
+    Config().initialize(ctx, toml, clone)
 
 
 def runCd(path:str):
@@ -159,11 +161,14 @@ def gitClone(repo: Repo):
 @click.pass_context
 def clone(ctx):
     """Clone the necessary repos"""
-    gitClone(Config().robotpyrepos.mostRepo)
-    for r in Config().robotpyrepos.addReposRobotPy:
-        gitClone(r)
-    for r in Config().robotpyrepos.addFullRobotRepos:
-        gitClone(r)
+    if Config().clone:
+        gitClone(Config().robotpyrepos.mostRepo)
+        for r in Config().robotpyrepos.addReposRobotPy:
+            gitClone(r)
+        for r in Config().robotpyrepos.addFullRobotRepos:
+            gitClone(r)
+    else:
+        print("Clone is disabled")
 
 cli.add_command(clone)
 
