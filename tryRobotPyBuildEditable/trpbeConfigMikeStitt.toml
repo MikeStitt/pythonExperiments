@@ -17,7 +17,7 @@ mostRobotPyRepo.url = 'git@github.com:MikeStitt/mostrobotpy.git'
 mostRobotPyRepo.branch = 'pyIterativeAndTimedRobot'
 
 mostRobotPyAddRepos = [
-    #{name='robotpy-rev', url='https://github.com/robotpy/robotpy-rev', branch='main'},
+    {name='robotpy-rev', url='https://github.com/robotpy/robotpy-rev', branch='main'},
     #{name='robotpy-navx', url='https://github.com/robotpy/robotpy-navx', branch='main'},
 ]
 

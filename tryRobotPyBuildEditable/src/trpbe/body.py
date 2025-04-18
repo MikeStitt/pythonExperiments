@@ -231,6 +231,7 @@ uninstallPackages = [
     "robotpy-wpiutil",
     "robotpy-xrp",
     "wpilib",
+    "robotpy-rev",
 ]
 
 uninstallPackagesSet = set(uninstallPackages)
