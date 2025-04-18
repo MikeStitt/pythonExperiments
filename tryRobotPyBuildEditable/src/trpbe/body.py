@@ -71,12 +71,14 @@ class Config(metaclass=Singleton):
         self.tomlFilename = tomlFilename
         self.clone = clone
         self.quiet = quiet
-        print(f"self.tomlFilename={self.tomlFilename}")
+        if not self.quiet:
+            print(f"self.tomlFilename={self.tomlFilename}")
 
         with open(tomlFilename, "rb") as f:
             self.tomlDict = tomli.load(f)
 
-            print(json.dumps(self.tomlDict, indent=4))
+            if not self.quiet:
+                print(json.dumps(self.tomlDict, indent=4))
 
         self.env = ConfigEnv(self.tomlDict)
         self.robotpyrepos = ConfigRepos(self.tomlDict)
@@ -119,6 +121,7 @@ def runCommand(args, cwd=None, shell=True)->subprocess.CompletedProcess:
 
 def runCommandNoWaitForOutput(args, cwd=None, shell=False):
 
+    print(f"command={args}")
     with subprocess.Popen(
             args=args,
             cwd=cwd,
