@@ -37,7 +37,8 @@ class ConfigRepos():
 
     def __init__(self, tomlDict):
         self.mostRepo: Repo|None = None
-        self.addRepos: list[Repo] = []
+        self.addReposRobotPy: list[Repo] = []
+        self.addFullRobotRepos: list[Repo] = []
 
         if 'robotpyrepos' in tomlDict:
             if 'mostRobotPyRepo' in tomlDict['robotpyrepos'] \
@@ -48,8 +49,12 @@ class ConfigRepos():
             if 'mostRobotPyAddRepos' in tomlDict['robotpyrepos'] \
                     and isinstance(tomlDict['robotpyrepos']['mostRobotPyAddRepos'], list):
                 for r in tomlDict['robotpyrepos']['mostRobotPyAddRepos']:
-                    self.addRepos.append(Repo(name=r['name'], url=r['url'], branch=r['branch']))
+                    self.addReposRobotPy.append(Repo(name=r['name'], url=r['url'], branch=r['branch']))
 
+            if 'addFullRobotRepos' in tomlDict['robotpyrepos'] \
+                    and isinstance(tomlDict['robotpyrepos']['addFullRobotRepos'], list):
+                for r in tomlDict['robotpyrepos']['addFullRobotRepos']:
+                    self.addFullRobotRepos.append(Repo(name=r['name'], url=r['url'], branch=r['branch']))
 
 
 
@@ -126,9 +131,15 @@ def runCommandNoWaitForOutput(args, cwd=None, shell=False):
         raise subprocess.CalledProcessError(p.returncode, p.args)
 
 def buildAddOnRobotPyPackageEditable(ctx, name:str):
-    """Build mostrobotpy"""
+    """Build add on robot py repos editable"""
     runCd(name)
-    runCommandNoWaitForOutput('python setup.py develop', shell=True)
+    runCommandNoWaitForOutput('python setup.py develop -N', shell=True)
+    runCd('..')
+
+def syncFullRobotRepos(ctx, name:str):
+    """sync full robotpy repos"""
+    runCd(name)
+    runCommandNoWaitForOutput('python -m robotpy sync', shell=True)
     runCd('..')
 
 
@@ -142,14 +153,16 @@ cli.add_command(showenv)
 
 def gitClone(repo: Repo):
     runCommand(f'git clone {repo.url}')
-    runCommand(f"git -C {repo.name} checkout {repo.branch}")
+    runCommand(f"git -C {repo.name} checkout {repo.branch} {repo.name}")
 
 @click.command()
 @click.pass_context
 def clone(ctx):
     """Clone the necessary repos"""
     gitClone(Config().robotpyrepos.mostRepo)
-    for r in Config().robotpyrepos.addRepos:
+    for r in Config().robotpyrepos.addReposRobotPy:
+        gitClone(r)
+    for r in Config().robotpyrepos.addFullRobotRepos:
         gitClone(r)
 
 cli.add_command(clone)
@@ -268,10 +281,20 @@ cli.add_command(buildreveditable)
 @click.pass_context
 def buildAddOnRobotPyEditablePackages(ctx):
     """build robotpy add on packages editable"""
-    for r in Config().robotpyrepos.addRepos:
+    for r in Config().robotpyrepos.addReposRobotPy:
         buildAddOnRobotPyPackageEditable(ctx, r.name)
 
 cli.add_command(buildAddOnRobotPyEditablePackages)
+
+
+@click.command()
+@click.pass_context
+def syncFullRobotRepos(ctx):
+    """build robotpy add on packages editable"""
+    for r in Config().robotpyrepos.addFullRobotRepos:
+        syncFullRobotRepos(ctx, r.name)
+
+cli.add_command(syncFullRobotRepos)
 
 
 @click.command()
@@ -300,6 +323,7 @@ def doeditable(ctx):
     ctx.invoke(clone)
     ctx.invoke(installformostrobotpy)
     ctx.invoke(installformostrobotpyeditable)
+    ctx.invoke(syncFullRobotRepos)
     ctx.invoke(uninstallpkgsformostrobotpyeditable)
     ctx.invoke(installeditablemostrobotpy)
     ctx.invoke(buildAddOnRobotPyEditablePackages)
