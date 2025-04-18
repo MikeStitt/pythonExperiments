@@ -136,7 +136,7 @@ def buildAddOnRobotPyPackageEditable(ctx, name:str):
     runCommandNoWaitForOutput('python setup.py develop -N', shell=True)
     runCd('..')
 
-def syncFullRobotRepos(ctx, name:str):
+def syncAFullRobotRepo(ctx, name:str):
     """sync full robotpy repos"""
     runCd(name)
     runCommandNoWaitForOutput('python -m robotpy sync', shell=True)
@@ -292,7 +292,7 @@ cli.add_command(buildAddOnRobotPyEditablePackages)
 def syncFullRobotRepos(ctx):
     """build robotpy add on packages editable"""
     for r in Config().robotpyrepos.addFullRobotRepos:
-        syncFullRobotRepos(ctx, r.name)
+        syncAFullRobotRepo(ctx, r.name)
 
 cli.add_command(syncFullRobotRepos)
 
