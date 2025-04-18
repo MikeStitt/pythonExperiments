@@ -152,7 +152,7 @@ def showenv(ctx):
 cli.add_command(showenv)
 
 def gitClone(repo: Repo):
-    runCommand(f'git clone {repo.url}')
+    runCommand(f'git clone {repo.url} {repo.name}')
     runCommand(f"git -C {repo.name} checkout {repo.branch}")
 
 @click.command()

@@ -21,7 +21,7 @@ mostRobotPyAddRepos = [
     #{name='robotpy-navx', url='https://github.com/robotpy/robotpy-navx', branch='main'},
 ]
 
-robotAddRepos = [
+addFullRobotRepos = [
     {name='mostRobotPySpires2025', url='git@github.com:spiresfrc9106/spiresRobot2025.git', branch='exp-timedrobotpy'},
     #{name='robotpy-navx', url='https://github.com/robotpy/robotpy-navx', branch='main'},
 ]
