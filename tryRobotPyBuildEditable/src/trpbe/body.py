@@ -66,10 +66,11 @@ class Config(metaclass=Singleton):
         self.tomlFilename = None
         self.tomlDict = {}
 
-    def initialize(self, ctx, tomlFilename:str, clone:bool):
+    def initialize(self, ctx, tomlFilename:str, clone:bool, quiet:bool):
         self.ctx = ctx
         self.tomlFilename = tomlFilename
         self.clone = clone
+        self.quiet = quiet
         print(f"self.tomlFilename={self.tomlFilename}")
 
         with open(tomlFilename, "rb") as f:
@@ -85,11 +86,12 @@ class Config(metaclass=Singleton):
 @click.group()
 @click.option('--toml', default='trpbeConfig.toml', help='Configuration file.')
 @click.option('--clone/--no-clone', default=True, help='Clone/checkout the repos.')
+@click.option('--quiet/--no-quiet', default=False, help='Do not print tool output.')
 @click.pass_context
-def cli(ctx, toml, clone):
+def cli(ctx, toml, clone, quiet):
     ctx.ensure_object(dict)
 
-    Config().initialize(ctx, toml, clone)
+    Config().initialize(ctx, toml, clone, quiet)
 
 
 def runCd(path:str):
@@ -111,7 +113,8 @@ def runCommand(args, cwd=None, shell=True)->subprocess.CompletedProcess:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
-    print(f"result=>\n{result.stdout}<=result\n")
+    if not Config().quiet:
+        print(f"result=>\n{result.stdout}<=result\n")
     return result
 
 def runCommandNoWaitForOutput(args, cwd=None, shell=False):
@@ -125,9 +128,9 @@ def runCommandNoWaitForOutput(args, cwd=None, shell=False):
             encoding="utf-8",
             errors="replace",
             bufsize=1, universal_newlines=True) as p:
-        print(f"type(p.stdout)={type(p.stdout)}")
         for line in p.stdout:
-            print(line, end='')  # process line here
+            if not Config().quiet:
+                print(line, end='')  # process line here
 
     if p.returncode != 0:
         raise subprocess.CalledProcessError(p.returncode, p.args)
