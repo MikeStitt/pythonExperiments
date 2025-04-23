@@ -7,3 +7,5 @@ networktables.json
 .venv*
 .idea
 *.egg-info
+
+.DS_Store
