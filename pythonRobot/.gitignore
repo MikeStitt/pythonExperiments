@@ -1,0 +1,10 @@
+__pycache__
+simgui-window.json
+networktables.json
+.coverage
+.simulationLogs
+# 9106 specific ignores
+/venv*
+/.venv*
+/.idea
+/*.json
