@@ -39,13 +39,15 @@ void ExpTimedRobot::StartCompetition() {
 
   int32_t status3 = 0;
   HAL_UpdateNotifierAlarm(m_notifier, startTime+100000, &status3);
-  auto now_us = HAL_WaitForNotifierAlarm(m_notifier, &status3);
+  int32_t status4 = 0;
+  auto now_us = HAL_WaitForNotifierAlarm(m_notifier, &status4);
 
   auto endTime = frc::RobotController::GetFPGATime();
 
-  printf("HAL_InitializeNotifier : Notifier: %d status=%x\n", (int)m_notifier, status1);
-  printf("HAL_SetNotifierName    : Notifier: %d status=%x\n", (int)m_notifier, status2);
-  printf("HAL_UpdateNotifierAlarm: Notifier: %d status=%x\n", (int)m_notifier, status3);
+  printf("HAL_InitializeNotifier  : Notifier: %d status=%x\n", (int)m_notifier, status1);
+  printf("HAL_SetNotifierName     : Notifier: %d status=%x\n", (int)m_notifier, status2);
+  printf("HAL_UpdateNotifierAlarm : Notifier: %d status=%x\n", (int)m_notifier, status3);
+  printf("HAL_WaitForNotifierAlarm: Notifier: %d status=%x\n", (int)m_notifier, status4);
 
   FRC_CheckErrorStatus(status1, "InitializeNotifier");
   FRC_CheckErrorStatus(status3, "UpdateNotifierAlarm");
