@@ -1,0 +1,15 @@
+*.py[ciod]
+*.so
+*.dylib
+*.egg-info
+*.whl
+py.typed
+
+/build
+/dist
+/gen
+
+_init*.py
+pkgcfg.py
+version.py
+rpy-include
