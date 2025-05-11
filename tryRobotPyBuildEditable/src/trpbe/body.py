@@ -3,6 +3,7 @@ import tomli
 import click
 import json
 import subprocess
+import copy
 from trpbe.singleton import Singleton
 
 from pathlib import Path
@@ -255,7 +256,10 @@ def uninstallpkgsformostrobotpyeditable(ctx):
     totalCountOfPackages = None
     oldTotalCountOfPackages = None
 
-    uninstallPackagesSuperSet = uninstallPackagesSet.update([ r.name for r in Config().robotpyrepos.addReposRobotPy])
+    uninstallPackagesSuperSet = copy.copy(uninstallPackagesSet)
+
+    for r in Config().robotpyrepos.addReposRobotPy:
+        uninstallPackagesSuperSet.add(r.name)
 
     while countOfPackages is None or oldTotalCountOfPackages is None or (countOfPackages > 1 and totalCountOfPackages < oldTotalCountOfPackages):
         listOfInstalledPackagesAsDicts = getListOfInstalledPackagesFromPip()
@@ -263,6 +267,8 @@ def uninstallpkgsformostrobotpyeditable(ctx):
         oldTotalCountOfPackages = totalCountOfPackages
         totalCountOfPackages = len(listOfInstalledPackages)
         listOfInstalledPackagesSet = set(listOfInstalledPackages)
+
+        print(f"uninstallPackagesSuperSet={uninstallPackagesSuperSet} listOfInstalledPackagesSet={listOfInstalledPackagesSet}")
 
         uninstallThesePackages = list(uninstallPackagesSuperSet.intersection(listOfInstalledPackagesSet))
 
