@@ -255,6 +255,8 @@ def uninstallpkgsformostrobotpyeditable(ctx):
     totalCountOfPackages = None
     oldTotalCountOfPackages = None
 
+    uninstallPackagesSuperSet = uninstallPackagesSet.update([ r.name for r in Config().robotpyrepos.addReposRobotPy])
+
     while countOfPackages is None or oldTotalCountOfPackages is None or (countOfPackages > 1 and totalCountOfPackages < oldTotalCountOfPackages):
         listOfInstalledPackagesAsDicts = getListOfInstalledPackagesFromPip()
         listOfInstalledPackages = [s['name'] for s in listOfInstalledPackagesAsDicts]
@@ -262,7 +264,7 @@ def uninstallpkgsformostrobotpyeditable(ctx):
         totalCountOfPackages = len(listOfInstalledPackages)
         listOfInstalledPackagesSet = set(listOfInstalledPackages)
 
-        uninstallThesePackages = list(uninstallPackagesSet.intersection(listOfInstalledPackagesSet))
+        uninstallThesePackages = list(uninstallPackagesSuperSet.intersection(listOfInstalledPackagesSet))
 
         countOfPackages = len(uninstallThesePackages)
 
