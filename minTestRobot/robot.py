@@ -2,6 +2,7 @@ import sys
 import wpilib
 
 from wpilib import RobotController
+from wpilib.timedrobotpy import TimedRobotPy
 
 def printEntryAndExit(func):
     def wrapper(*args, **kwargs):
@@ -13,7 +14,7 @@ def printEntryAndExit(func):
         return result
     return wrapper
 
-class MyRobot(wpilib.TimedRobot):
+class MyRobot(TimedRobotPy):
 
     @printEntryAndExit
     def startCompetition(self):
