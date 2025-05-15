@@ -139,7 +139,7 @@ def runCommandNoWaitForOutput(args, cwd=None, shell=False):
     if p.returncode != 0:
         raise subprocess.CalledProcessError(p.returncode, p.args)
 
-def buildAddOnRobotPyPackageEditable(ctx, name:str):
+def buildAddOnRobotPyPackageEdit(ctx, name:str):
     """Build add on robot py repos editable"""
     runCd(name)
     runCommandNoWaitForOutput('python setup.py develop -N', shell=True)
@@ -181,7 +181,7 @@ cli.add_command(clone)
 
 @click.command()
 @click.pass_context
-def installformostrobotpy(ctx):
+def installformrobopy(ctx):
     """Install python modules that mostrobotpy needs to build"""
     runCommand('pip install robotpy')
     runCd(Config().robotpyrepos.mostRepo.name)
@@ -189,42 +189,45 @@ def installformostrobotpy(ctx):
     runCommand('pip install numpy')
     runCd('..')
 
-cli.add_command(installformostrobotpy)
+cli.add_command(installformrobopy)
 
 
 @click.command()
 @click.pass_context
-def installformostrobotpyeditable(ctx):
+def installformrobopyedit(ctx):
     """Install python modules that mostrobotpy needs to build editable"""
-    runCommand('pip install robotpy-build')
+    #runCommand('pip install robotpy-build')
+    runCd("robotpy-build")
+    runCommand('pip install -e .')
+    runCd('..')
 
 
-cli.add_command(installformostrobotpyeditable)
+cli.add_command(installformrobopyedit)
 
 
 @click.command()
 @click.pass_context
-def buildmostrobotpy(ctx):
+def buildmrobopy(ctx):
     """Build mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
     runCommandNoWaitForOutput('python -m devtools ci run', shell=True )
     runCd('..')
 
-cli.add_command(buildmostrobotpy)
+cli.add_command(buildmrobopy)
 
 
 @click.command()
 @click.pass_context
-def installeditablemostrobotpy(ctx):
+def installeditmrobopy(ctx):
     """Build editable mostrobotpy"""
     runCd(Config().robotpyrepos.mostRepo.name)
     runCommandNoWaitForOutput('python -m devtools develop', shell=True)
     runCd('..')
 
 
-cli.add_command(installeditablemostrobotpy)
+cli.add_command(installeditmrobopy)
 
-uninstallPackages = [
+uninstallPacks = [
     "pyntcore",
     "robotpy-apriltag",
     "robotpy-cscore",
@@ -241,114 +244,105 @@ uninstallPackages = [
     "robotpy-rev",
 ]
 
-uninstallPackagesSet = set(uninstallPackages)
+uninstallPacksSet = set(uninstallPacks)
 
-def getListOfInstalledPackagesFromPip()->list[dict[str, str]]:
+def getListOfInstalledPacksFromPip()->list[dict[str, str]]:
     result: subprocess.CompletedProcess = runCommand('pip list --format json')
     firstLine = result.stdout.splitlines()[0]
-    listOfInstalledPackagesAsDicts = json.loads(firstLine)
-    return listOfInstalledPackagesAsDicts
+    listOfInstalledPacksAsDicts = json.loads(firstLine)
+    return listOfInstalledPacksAsDicts
 
 @click.command()
 @click.pass_context
-def uninstallpkgsformostrobotpyeditable(ctx):
-    countOfPackages = None
-    totalCountOfPackages = None
-    oldTotalCountOfPackages = None
+def uninstallpkgsformrobopyedit(ctx):
+    """Uninstall python modules that mostrobotpy needs to build editable"""
+    countOfPacks = None
+    totalCountOfPacks = None
+    oldTotalCountOfPacks = None
 
-    uninstallPackagesSuperSet = copy.copy(uninstallPackagesSet)
+    uninstallPacksSuperSet = copy.copy(uninstallPacksSet)
 
     for r in Config().robotpyrepos.addReposRobotPy:
-        uninstallPackagesSuperSet.add(r.name)
+        uninstallPacksSuperSet.add(r.name)
 
-    while countOfPackages is None or oldTotalCountOfPackages is None or (countOfPackages > 1 and totalCountOfPackages < oldTotalCountOfPackages):
-        listOfInstalledPackagesAsDicts = getListOfInstalledPackagesFromPip()
-        listOfInstalledPackages = [s['name'] for s in listOfInstalledPackagesAsDicts]
-        oldTotalCountOfPackages = totalCountOfPackages
-        totalCountOfPackages = len(listOfInstalledPackages)
-        listOfInstalledPackagesSet = set(listOfInstalledPackages)
+    while countOfPacks is None or oldTotalCountOfPacks is None or (countOfPacks > 1 and totalCountOfPacks < oldTotalCountOfPacks):
+        listOfInstalledPacksAsDicts = getListOfInstalledPacksFromPip()
+        listOfInstalledPacks = [s['name'] for s in listOfInstalledPacksAsDicts]
+        oldTotalCountOfPacks = totalCountOfPacks
+        totalCountOfPacks = len(listOfInstalledPacks)
+        listOfInstalledPacksSet = set(listOfInstalledPacks)
 
-        print(f"uninstallPackagesSuperSet={uninstallPackagesSuperSet} listOfInstalledPackagesSet={listOfInstalledPackagesSet}")
+        print(f"uninstallPacksSuperSet={uninstallPacksSuperSet} listOfInstalledPacksSet={listOfInstalledPacksSet}")
 
-        uninstallThesePackages = list(uninstallPackagesSuperSet.intersection(listOfInstalledPackagesSet))
+        uninstallThesePacks = list(uninstallPacksSuperSet.intersection(listOfInstalledPacksSet))
 
-        countOfPackages = len(uninstallThesePackages)
+        countOfPacks = len(uninstallThesePacks)
 
-        for packageStr in uninstallThesePackages:
+        for packageStr in uninstallThesePacks:
             runCommand(f'pip uninstall -y {packageStr}')
 
 
-cli.add_command(uninstallpkgsformostrobotpyeditable)
+cli.add_command(uninstallpkgsformrobopyedit)
 
 
 @click.command()
 @click.pass_context
-def buildreveditable(ctx):
-    """build robotpy-rev editable"""
-    buildAddOnRobotPyPackageEditable(ctx, 'robotpy-rev')
+def buildrevedit(ctx):
+    """Build robotpy-rev editable"""
+    buildAddOnRobotPyPackageEdit(ctx, 'robotpy-rev')
 
-cli.add_command(buildreveditable)
-
-@click.command()
-@click.pass_context
-def buildnavxeditable(ctx):
-    """build robotpy-navx editable"""
-    buildAddOnRobotPyPackageEditable(ctx, 'robotpy-navx')
-
-cli.add_command(buildreveditable)
+cli.add_command(buildrevedit)
 
 @click.command()
 @click.pass_context
-def buildAddOnRobotPyEditablePackages(ctx):
-    """build robotpy add on packages editable"""
+def buildnavxedit(ctx):
+    """Build robotpy-navx editable"""
+    buildAddOnRobotPyPackageEdit(ctx, 'robotpy-navx')
+
+cli.add_command(buildrevedit)
+
+@click.command()
+@click.pass_context
+def buildAddOnRobotPyEditPacks(ctx):
+    """Build robotpy add on packages editable"""
     for r in Config().robotpyrepos.addReposRobotPy:
-        buildAddOnRobotPyPackageEditable(ctx, r.name)
+        buildAddOnRobotPyPackageEdit(ctx, r.name)
 
-cli.add_command(buildAddOnRobotPyEditablePackages)
+cli.add_command(buildAddOnRobotPyEditPacks)
 
 
 @click.command()
 @click.pass_context
 def syncFullRobotRepos(ctx):
-    """build robotpy add on packages editable"""
+    """Run robotpy sync on all full robot repos"""
     for r in Config().robotpyrepos.addFullRobotRepos:
         syncAFullRobotRepo(ctx, r.name)
 
 cli.add_command(syncFullRobotRepos)
 
-
-@click.command()
-@click.pass_context
-def exp(ctx):
-    """try an experiment"""
-    runCommandNoWaitForOutput("ls")
-cli.add_command(exp)
-
-
-
 @click.command()
 @click.pass_context
 def dobuildall(ctx):
-    """run all steps"""
+    """Run all steps (not editable)"""
     ctx.invoke(clone)
-    ctx.invoke(installformostrobotpy)
-    ctx.invoke(buildmostrobotpy)
+    ctx.invoke(installformrobopy)
+    ctx.invoke(buildmrobopy)
 
 cli.add_command(dobuildall)
 
 @click.command()
 @click.pass_context
-def doeditable(ctx):
-    """run all steps"""
+def doedit(ctx):
+    """Run all steps (editable)"""
     ctx.invoke(clone)
-    ctx.invoke(installformostrobotpy)
-    ctx.invoke(installformostrobotpyeditable)
+    ctx.invoke(installformrobopy)
+    ctx.invoke(installformrobopyedit)
     ctx.invoke(syncFullRobotRepos)
-    ctx.invoke(uninstallpkgsformostrobotpyeditable)
-    ctx.invoke(installeditablemostrobotpy)
-    ctx.invoke(buildAddOnRobotPyEditablePackages)
+    ctx.invoke(uninstallpkgsformrobopyedit)
+    ctx.invoke(installeditmrobopy)
+    ctx.invoke(buildAddOnRobotPyEditPacks)
 
-cli.add_command(doeditable)
+cli.add_command(doedit)
 
 
 
