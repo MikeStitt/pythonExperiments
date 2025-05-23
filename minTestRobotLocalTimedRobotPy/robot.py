@@ -2,34 +2,16 @@ import gc
 import sys
 
 from wpilib import RobotController
-from wpilib.timedrobotpy import TimedRobotPy
+from timedrobotpy import TimedRobotPy
 from wpilib import TimedRobot
 
 import os
-
-def isEnvVarTrue(var_name):
-    """
-    Checks if an environment variable exists and evaluates to True.
-
-    Args:
-        var_name: The name of the environment variable.
-
-    Returns:
-        True if the variable exists and is considered true, False otherwise.
-    """
-    var_value = os.environ.get(var_name)
-
-    if var_value is None:
-        return False  # Variable does not exist
-
-    true_values = ['true', '1', 'yes', 'y']
-    return var_value.lower() in true_values
 
 _getFPGATime = RobotController.getFPGATime
 
 microsecondsAsInt = int
 
-PRINT_ENTRY_EXIT = isEnvVarTrue('MINTESTROBOT_PRINT_ENTRY_EXIT')
+PRINT_ENTRY_EXIT = False
 if PRINT_ENTRY_EXIT:
     def printEntry(name, startTimeUs:microsecondsAsInt):
         print(f"{startTimeUs/1000_000.0:.6f}:Enter:{name}")
@@ -55,11 +37,9 @@ def printEntryAndExit(func):
     return wrapper
 
 RobotParentClass = TimedRobotPy
-if isEnvVarTrue('MINTESTROBOT_USE_TIMEDRROBOT'):
+USE_TIMEDROBOT = False
+if USE_TIMEDROBOT:
     RobotParentClass = TimedRobot
-
-
-
 
 NUM_TEST_PERIODIC = 10
 NUM_PERIODS = 100

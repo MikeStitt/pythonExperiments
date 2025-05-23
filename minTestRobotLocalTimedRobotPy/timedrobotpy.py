@@ -14,7 +14,7 @@ from hal import (
 from wpilib import RobotController
 import wpimath.units
 
-from .iterativerobotpy import IterativeRobotPy
+from iterativerobotpy import IterativeRobotPy
 
 _getFPGATime = RobotController.getFPGATime
 _kResourceType_Framework = tResourceType.kResourceType_Framework
