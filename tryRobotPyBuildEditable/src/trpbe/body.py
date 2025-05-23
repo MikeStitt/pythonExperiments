@@ -92,6 +92,14 @@ class Config(metaclass=Singleton):
 @click.option('--quiet/--no-quiet', default=False, help='Do not print tool output.')
 @click.pass_context
 def cli(ctx, toml, clone, quiet):
+    """
+    This tool is used to put robotpy (editable) inside a python environment.
+
+    Example usage:
+
+    \b
+    deactivate ; rm -rf .venvTryRobotPyBuildEditable ; python3 -m venv .venvTryRobotPyBuildEditable ; . .venvTryRobotPyBuildEditable/bin/activate ; pip install --upgrade pip; pip install -e . ; trpbe --no-clone --toml trpbeConfigMikeStitt.toml doedit; rehash;
+    """
     ctx.ensure_object(dict)
 
     Config().initialize(ctx, toml, clone, quiet)
@@ -187,6 +195,9 @@ def installformrobopy(ctx):
     runCd(Config().robotpyrepos.mostRepo.name)
     runCommand('pip install -r rdev_requirements.txt')
     runCommand('pip install numpy')
+    runCommand('python -m pip install editables')
+    runCommand('python -m pip install pkgconf==2.3.0.post2')
+
     runCd('..')
 
 cli.add_command(installformrobopy)
@@ -336,7 +347,7 @@ def doedit(ctx):
     """Run all steps (editable)"""
     ctx.invoke(clone)
     ctx.invoke(installformrobopy)
-    ctx.invoke(installformrobopyedit)
+    #ctx.invoke(installformrobopyedit)
     ctx.invoke(syncFullRobotRepos)
     ctx.invoke(uninstallpkgsformrobopyedit)
     ctx.invoke(installeditmrobopy)

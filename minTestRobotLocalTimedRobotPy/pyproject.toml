@@ -1,0 +1,38 @@
+#
+# Use this configuration file to control what RobotPy packages are installed
+# on your RoboRIO
+#
+
+[tool.robotpy]
+# to see what versions are available: https://pypi.org/pypi/robotpy/json
+# Version of robotpy this project depends on
+robotpy_version = "2025.3.2.1"
+
+# Which extra RobotPy components should be installed
+# -> equivalent to `pip install robotpy[extra1, ...]
+robotpy_extras = [
+    # "all"
+    #"apriltag",
+    # "commands2"
+    #"cscore",
+    #"navx",
+    #"rev",
+    # "romi"
+    # "sim"
+]
+
+# Other pip packages to install
+requires = [
+    # "pathplannerlib",
+    # "playingwithfusion",
+    # "phoenix5",
+    #"phoenix6",
+    #"photonlibpy==2025.3.1",
+    "debugpy==1.8.11",
+    #"phoenix6==25.1.0",
+    #"robotpy-playingwithfusion == 2025.0.0",
+]
+
+
+[tool.robotpy.pyfrc]
+isolated = true
