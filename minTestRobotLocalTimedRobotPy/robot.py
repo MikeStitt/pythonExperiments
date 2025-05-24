@@ -5,8 +5,6 @@ from wpilib import RobotController
 from timedrobotpy import TimedRobotPy
 from wpilib import TimedRobot
 
-import os
-
 _getFPGATime = RobotController.getFPGATime
 
 microsecondsAsInt = int
@@ -37,7 +35,7 @@ def printEntryAndExit(func):
     return wrapper
 
 RobotParentClass = TimedRobotPy
-USE_TIMEDROBOT = False
+USE_TIMEDROBOT = True
 if USE_TIMEDROBOT:
     RobotParentClass = TimedRobot
 
@@ -64,11 +62,11 @@ class MyRobot(RobotParentClass):
         super().endCompetition()
         avgDeltaCallTimesUs = {}
         commonCallCount = self._callCount['loopStartTime']
+        print(f"commonCallCount={commonCallCount}")
         for name, value in self._callTimesUs.items():
-            print(f"commonCallCount={commonCallCount}=self._callCount[{name}]={self._callCount[name]}")
             assert commonCallCount == self._callCount[name]
             avgDeltaCallTimesUs[name] = (self._callTimesUs[name]-self._callTimesUs['loopStartTime'])/self._callCount[name]
-            print(f'avgDeltaCallTimesUs[{name}]={avgDeltaCallTimesUs[name]}')
+            print(f'avgDeltaCallTimesUs{name}]={avgDeltaCallTimesUs[name]}')
 
     def robotInit(self):
         self.count = 0
@@ -86,6 +84,7 @@ class MyRobot(RobotParentClass):
                              0.020, 0.000_001+0.000_001*i)
             self._callTimesUs[name] = 0
             self._callCount[name] = 0
+        print(f"robotInit Done RobotParentClass={RobotParentClass.__name__}")
         gc.freeze()
         gc.disable()
 

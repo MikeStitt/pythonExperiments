@@ -1,5 +1,5 @@
 from typing import Any, Callable, Iterable, ClassVar
-from heapq import heappush, heappop
+from heapq import heappush, heappop, _siftup
 from hal import (
     report,
     initializeNotifier,
@@ -24,6 +24,9 @@ microsecondsAsInt = int
 
 
 class _Callback:
+
+    __slots__ = 'func', '_periodUs', 'expirationUs'
+
     def __init__(
         self,
         func: Callable[[], None],
@@ -96,6 +99,9 @@ class _Callback:
 
 
 class _OrderedList:
+
+    __slots__ = '_data'
+
     def __init__(self) -> None:
         self._data: list[Any] = []
 
@@ -112,6 +118,9 @@ class _OrderedList:
             return self._data[0]
         else:
             return None
+
+    def siftupRoot(self):
+        _siftup(self._data, 0)
 
     def __len__(self) -> int:
         return len(self._data)
@@ -189,13 +198,21 @@ class TimedRobotPy(IterativeRobotPy):
                 #  We don't have to check there's an element in the queue first because
                 #  there's always at least one (the constructor adds one). It's re-enqueued
                 #  at the end of the loop.
-                callback = self._callbacks.pop()
+                #callback = self._callbacks.pop()
+                callback = self._callbacks.peek()
 
                 status = updateNotifierAlarm(self._notifier, callback.expirationUs)
                 if status != 0:
                     raise RuntimeError(f"updateNotifierAlarm() returned {status}")
 
                 self._loopStartTimeUs, status = waitForNotifierAlarm(self._notifier)
+
+                # The C++ code that this was based upon used the following line to establish
+                # the loopStart time. Uncomment it and
+                # the "self._loopStartTimeUs = startTimeUs" further below to emulate the
+                # legacy behavior.
+                # startTimeUs = _getFPGATime() # uncomment this for legacy behavior
+
                 if status != 0:
                     raise RuntimeError(
                         f"waitForNotifierAlarm() returned _loopStartTimeUs={self._loopStartTimeUs} status={status}"
@@ -207,11 +224,25 @@ class TimedRobotPy(IterativeRobotPy):
                     # See the API for waitForNotifierAlarm
                     break
 
+                # On a RoboRio 2, the following print statement results in values like:
+                # print(f"expUs={callback.expirationUs} current={self._loopStartTimeUs}, legacy={startTimeUs}")
+                # [2.27] expUs=3418017 current=3418078, legacy=3418152
+                # [2.29] expUs=3438017 current=3438075, legacy=3438149
+                # This indicates that there is about 60 microseconds of skid from
+                # callback.expirationUs to self._loopStartTimeUs
+                # and there is about 70 microseconds of skid from self._loopStartTimeUs to startTimeUs.
+                # Consequently, this code uses "self._loopStartTimeUs, status = waitForNotifierAlarm"
+                # to establish loopStartTime, rather than slowing down the code by adding an extra call to
+                # "startTimeUs = _getFPGATime()".
+
+                # self._loopStartTimeUs = startTimeUs # Uncomment this line for legacy behavior.
+
                 self._runCallbackAndReschedule(callback)
 
                 #  Process all other callbacks that are ready to run
                 while self._callbacks.peek().expirationUs <= self._loopStartTimeUs:
-                    callback = self._callbacks.pop()
+                    #callback = self._callbacks.pop()
+                    callback = self._callbacks.peek()
                     self._runCallbackAndReschedule(callback)
         finally:
             # pytests hang on PC when we don't force a call to self._stopNotifier()
@@ -224,7 +255,9 @@ class TimedRobotPy(IterativeRobotPy):
         # that ran long we immediately push the next invocation to the
         # following period.
         callback.setNextStartTimeUs(_getFPGATime())
-        self._callbacks.add(callback)
+        #assert callback is self._callbacks.peek()
+        self._callbacks.siftupRoot()
+        #self._callbacks.add(callback)
 
     def _stopNotifier(self):
         stopNotifier(self._notifier)
@@ -268,9 +301,10 @@ class TimedRobotPy(IterativeRobotPy):
                          for scheduling a callback in a different timeslot relative
                          to TimedRobotPy.
         """
-
-        self._callbacks.add(
-            _Callback.makeCallBack(
-                callback, self._startTimeUs, int(period * 1e6), int(offset * 1e6)
-            )
+        cb = _Callback.makeCallBack(
+            callback, self._startTimeUs, int(period * 1e6), int(offset * 1e6)
         )
+        if len(self._callbacks):
+            assert cb > self._callbacks.peek()
+        self._callbacks.add(cb)
+
