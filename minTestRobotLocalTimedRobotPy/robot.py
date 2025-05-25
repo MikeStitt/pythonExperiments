@@ -3,6 +3,7 @@ import sys
 
 from wpilib import RobotController
 from timedrobotpy import TimedRobotPy
+from wpilib.timedrobotpy import TimedRobotPy
 from wpilib import TimedRobot
 
 _getFPGATime = RobotController.getFPGATime
@@ -39,7 +40,7 @@ USE_TIMEDROBOT = True
 if USE_TIMEDROBOT:
     RobotParentClass = TimedRobot
 
-NUM_TEST_PERIODIC = 10
+NUM_TEST_PERIODIC = 2
 NUM_PERIODS = 100
 
 class MyRobot(RobotParentClass):
@@ -85,8 +86,8 @@ class MyRobot(RobotParentClass):
             self._callTimesUs[name] = 0
             self._callCount[name] = 0
         print(f"robotInit Done RobotParentClass={RobotParentClass.__name__}")
-        gc.freeze()
-        gc.disable()
+        #gc.freeze()
+        #gc.disable()
 
 
 
