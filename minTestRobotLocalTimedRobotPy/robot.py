@@ -36,12 +36,12 @@ def printEntryAndExit(func):
     return wrapper
 
 RobotParentClass = TimedRobotPy
-USE_TIMEDROBOT = True
+USE_TIMEDROBOT = False
 if USE_TIMEDROBOT:
     RobotParentClass = TimedRobot
 
 NUM_TEST_PERIODIC = 2
-NUM_PERIODS = 100
+NUM_PERIODS = 1000
 
 class MyRobot(RobotParentClass):
 
@@ -67,7 +67,7 @@ class MyRobot(RobotParentClass):
         for name, value in self._callTimesUs.items():
             assert commonCallCount == self._callCount[name]
             avgDeltaCallTimesUs[name] = (self._callTimesUs[name]-self._callTimesUs['loopStartTime'])/self._callCount[name]
-            print(f'avgDeltaCallTimesUs{name}]={avgDeltaCallTimesUs[name]}')
+            print(f'avgDeltaCallTimesUs[{name}]={avgDeltaCallTimesUs[name]}')
 
     def robotInit(self):
         self.count = 0
@@ -86,6 +86,8 @@ class MyRobot(RobotParentClass):
             self._callTimesUs[name] = 0
             self._callCount[name] = 0
         print(f"robotInit Done RobotParentClass={RobotParentClass.__name__}")
+        if not USE_TIMEDROBOT:
+            print(f"self._callbacks={type(self._callbacks).__name__}")
         #gc.freeze()
         #gc.disable()
 
